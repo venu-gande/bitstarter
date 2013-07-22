@@ -4,7 +4,7 @@ var app = express();
 app.use(express.logger());
 
 app.get('/', function(request, response) {
-var buf = fs.readFileSync('/home/ubuntu/bitstarter/index.html');
+var buf = fs.readFileSync('index.html');
 
   response.send(buf.toString('utf-8'));
 });
