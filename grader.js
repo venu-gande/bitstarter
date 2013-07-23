@@ -24,11 +24,13 @@ References:
 var fs = require('fs');
 var program = require('commander');
 var cheerio = require('cheerio');
+var sys = require('util'),
+    rest = require('./restler');
 var HTMLFILE_DEFAULT = "index.html";
 var CHECKSFILE_DEFAULT = "checks.json";
-
-var assertFileExists = function(infile) {
-    var instr = infile.toString();
+var URL_DEFAULT = "http://pure-crag-9574.herokuapp.com"
+var assertFileExists = function(jaffa) {
+    var instr = jaffa.toString();
     if(!fs.existsSync(instr)) {
         console.log("%s does not exist. Exiting.", instr);
         process.exit(1); // http://nodejs.org/api/process.html#process_process_exit_code
@@ -61,12 +63,29 @@ var clone = function(fn) {
     return fn.bind({});
 };
 
+var validURL = function(inUrl){
+// console.log(inUrl.toString());
+ rest.get(inUrl.toString()).on('complete', function(result) {
+  if (result instanceof Error) {
+    sys.puts('Error: ' + result.message);
+    this.retry(5000); // try again after 5 sec
+  } else {
+  // console.log(result);
+   fs.writeFile('message.html', result.toString(), function (err) {
+  if (err) throw err;
+ // console.log('It\'s saved!');
+}); 
+  }
+});
+
+};
+
 if(require.main == module) {
     program
         .option('-c, --checks <check_file>', 'Path to checks.json', clone(assertFileExists), CHECKSFILE_DEFAULT)
-        .option('-f, --file <html_file>', 'Path to index.html', clone(assertFileExists), HTMLFILE_DEFAULT)
+        .option('-u, --url <url_string>', 'Url to be fetched',validURL,URL_DEFAULT)
         .parse(process.argv);
-    var checkJson = checkHtmlFile(program.file, program.checks);
+    var checkJson = checkHtmlFile('message.html', program.checks);
     var outJson = JSON.stringify(checkJson, null, 4);
     console.log(outJson);
 } else {
